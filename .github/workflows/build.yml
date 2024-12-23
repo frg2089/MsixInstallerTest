@@ -1,0 +1,33 @@
+name: Build Windows
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: 签出仓库
+        uses: actions/checkout@v4
+      
+      - id: MsixInstaller
+        uses: frg2089/MsixInstaller@master
+        with:
+          msix: pixez.msix
+
+      - name: 生成校验和
+        shell: pwsh
+        run: |-
+          Write-Output "### Build Success :rocket:" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|algorithm|checksum|" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|:-:|:-:|" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|${{ steps.MsixInstaller.outputs.algorithm }}|${{ steps.MsixInstaller.outputs.checksum }}|" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: 上传 MSIX 安装器
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: ${{ steps.MsixInstaller.outputs.path }}
+          compression-level: 9
